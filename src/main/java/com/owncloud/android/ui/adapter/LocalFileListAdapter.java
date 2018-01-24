@@ -21,12 +21,13 @@
 package com.owncloud.android.ui.adapter;
 
 import android.content.Context;
+import android.database.DataSetObserver;
 import android.graphics.Bitmap;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
-import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -54,7 +55,7 @@ import java.util.Vector;
  * This Adapter populates a ListView with all files and directories contained
  * in a local directory
  */
-public class LocalFileListAdapter extends BaseAdapter implements FilterableListAdapter {
+public class LocalFileListAdapter extends RecyclerView.Adapter implements FilterableListAdapter {
 
     private static final String TAG = LocalFileListAdapter.class.getSimpleName();
 
@@ -80,6 +81,16 @@ public class LocalFileListAdapter extends BaseAdapter implements FilterableListA
     }
 
     @Override
+    public void registerDataSetObserver(DataSetObserver observer) {
+
+    }
+
+    @Override
+    public void unregisterDataSetObserver(DataSetObserver observer) {
+
+    }
+
+    @Override
     public int getCount() {
         return mFiles != null ? mFiles.length : 0;
     }
@@ -95,6 +106,21 @@ public class LocalFileListAdapter extends BaseAdapter implements FilterableListA
     @Override
     public long getItemId(int position) {
         return mFiles != null && mFiles.length <= position ? position : -1;
+    }
+
+    @Override
+    public int getItemCount() {
+        return mFiles.length;
+    }
+
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        return null;
+    }
+
+    @Override
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+
     }
 
     @Override
@@ -257,10 +283,11 @@ public class LocalFileListAdapter extends BaseAdapter implements FilterableListA
         return 1;
     }
 
-    @Override
-    public boolean hasStableIds() {
-        return false;
-    }
+    // todo recycler
+//    @Override
+//    public boolean hasStableIds() {
+//        return false;
+//    }
 
     @Override
     public boolean isEmpty() {

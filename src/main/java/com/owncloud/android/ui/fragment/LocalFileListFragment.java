@@ -21,7 +21,6 @@
 package com.owncloud.android.ui.fragment;
 
 import android.app.Activity;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.SparseBooleanArray;
@@ -30,7 +29,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -40,7 +38,6 @@ import com.owncloud.android.lib.common.utils.Log_OC;
 import com.owncloud.android.ui.adapter.LocalFileListAdapter;
 import com.owncloud.android.utils.AnalyticsUtils;
 import com.owncloud.android.utils.FileSortOrder;
-import com.owncloud.android.utils.ThemeUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -130,7 +127,7 @@ public class LocalFileListFragment extends ExtendedListFragment {
                 mContainerActivity.getInitialDirectory(),
                 getActivity()
         );
-        setListAdapter(mAdapter);
+        setRecyclerViewAdapter(mAdapter);
         
         Log_OC.i(TAG, "onActivityCreated() stop");
     }
@@ -167,17 +164,18 @@ public class LocalFileListFragment extends ExtendedListFragment {
                 saveIndexAndTopPosition(position);
             
             } else {    /// Click on a file
-                ImageView checkBoxV = (ImageView) v.findViewById(R.id.custom_checkbox);
+                ImageView checkBoxV = v.findViewById(R.id.custom_checkbox);
                 if (checkBoxV != null) {
-                    if (getListView().isItemChecked(position)) {
-                        v.setBackgroundColor(getContext().getResources().getColor(R.color.selected_item_background));
-                        checkBoxV.setImageDrawable(ThemeUtils.tintDrawable(R.drawable.ic_checkbox_marked,
-                                ThemeUtils.primaryColor()));
-
-                    } else {
-                        v.setBackgroundColor(Color.WHITE);
-                        checkBoxV.setImageResource(R.drawable.ic_checkbox_blank_outline);
-                    }
+                    // TODO recycler view
+//                    if (getRecyclerView().isItemChecked(position)) {
+//                        v.setBackgroundColor(getContext().getResources().getColor(R.color.selected_item_background));
+//                        checkBoxV.setImageDrawable(ThemeUtils.tintDrawable(R.drawable.ic_checkbox_marked,
+//                                ThemeUtils.primaryColor()));
+//
+//                    } else {
+//                        v.setBackgroundColor(Color.WHITE);
+//                        checkBoxV.setImageResource(R.drawable.ic_checkbox_blank_outline);
+//                    }
                 }
                 // notify the change to the container Activity
                 mContainerActivity.onFileClick(file);
@@ -254,28 +252,31 @@ public class LocalFileListFragment extends ExtendedListFragment {
         }
 
         // by now, only files in the same directory will be kept as selected
-        mCurrentListView.clearChoices();
+        // TODO recycler view
+//        mCurrentListView.clearChoices();
         mAdapter.swapDirectory(directory);
         if (mDirectory == null || !mDirectory.equals(directory)) {
-            mCurrentListView.setSelection(0);
+            // TODO recycler view
+//            mCurrentListView.setSelection(0);
         }
         mDirectory = directory;
     }
     
 
     /**
-     * Returns the fule paths to the files checked by the user
+     * Returns the full paths to the files checked by the user
      * 
      * @return      File paths to the files checked by the user.
      */
     public String[] getCheckedFilePaths() {
         ArrayList<String> result = new ArrayList<>();
-        SparseBooleanArray positions = mCurrentListView.getCheckedItemPositions();
+        // TODO recycler view
+        SparseBooleanArray positions = new SparseBooleanArray(); // mCurrentListView.getCheckedItemPositions();
         if (positions.size() > 0) {
             for (int i = 0; i < positions.size(); i++) {
                 if (positions.get(positions.keyAt(i))) {
-                    result.add(((File) mCurrentListView.getItemAtPosition(
-                            positions.keyAt(i))).getAbsolutePath());
+                    // TODO recycler view
+//                    result.add(((File) mCurrentListView.getItemAtPosition(positions.keyAt(i))).getAbsolutePath());
                 }
             }
 
@@ -294,13 +295,14 @@ public class LocalFileListFragment extends ExtendedListFragment {
      * @param select <code>true</code> to select all, <code>false</code> to deselect all
      */
     public void selectAllFiles(boolean select) {
-        AbsListView listView = getListView();
-        for (int position = 0; position < listView.getCount(); position++) {
-            File file = (File) mAdapter.getItem(position);
-            if (file.isFile()) {
-                listView.setItemChecked(position, select);
-            }
-        }
+        // TODO recycler view
+//        AbsListView listView = getRecyclerView();
+//        for (int position = 0; position < listView.getCount(); position++) {
+//            File file = (File) mAdapter.getItem(position);
+//            if (file.isFile()) {
+//                listView.setItemChecked(position, select);
+//            }
+//        }
     }
     
     /**

@@ -21,7 +21,6 @@
 package com.owncloud.android.ui.fragment;
 
 import android.os.Bundle;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,9 +45,9 @@ public class ExpandableListFragment extends ExtendedListFragment implements OnCh
         mList.invalidate();
     }
 
-    public ExpandableListView getListView() {
-        return mList;
-    }
+//    public RecyclerView getRecyclerView() {
+//        return mList;
+//    }
     
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -57,7 +56,7 @@ public class ExpandableListFragment extends ExtendedListFragment implements OnCh
         View v = inflater.inflate(R.layout.list_fragment_expandable, null);
         setupEmptyList(v);
 
-        mList = (ExpandableListView)(v.findViewById(R.id.list_root));
+        mList = v.findViewById(R.id.list_root);
         mList.setOnChildClickListener(this);
 
         mList.setDivider(getResources().getDrawable(R.drawable.uploader_list_separator));
@@ -69,8 +68,8 @@ public class ExpandableListFragment extends ExtendedListFragment implements OnCh
 //        }
         
         // Pull down refresh
-        mRefreshListLayout = (SwipeRefreshLayout) v.findViewById(R.id.swipe_refresh_files);
-        mRefreshEmptyLayout = (SwipeRefreshLayout) v.findViewById(R.id.swipe_refresh_files_emptyView);
+        mRefreshListLayout = v.findViewById(R.id.swipe_refresh_files);
+        mRefreshEmptyLayout = v.findViewById(R.id.swipe_refresh_files_emptyView);
         
         onCreateSwipeToRefresh(mRefreshListLayout);
         onCreateSwipeToRefresh(mRefreshEmptyLayout);
