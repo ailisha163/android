@@ -225,7 +225,7 @@ public class OCFileListAdapter extends RecyclerView.Adapter<OCFileListAdapter.OC
         holder.thumbnail.setTag(file.getFileId());
         setThumbnail(file, holder.thumbnail);
 
-        holder.itemLayout.setOnClickListener(v -> onItemClickListener.onItemClick(file));
+        holder.itemLayout.setOnClickListener(v -> onItemClickListener.onItemClicked(file));
 
         holder.fileName.setText(file.getFileName());
 
@@ -234,6 +234,8 @@ public class OCFileListAdapter extends RecyclerView.Adapter<OCFileListAdapter.OC
             itemViewHolder.fileSize.setText(DisplayUtils.bytesToHumanReadable(file.getFileLength()));
             itemViewHolder.lastModification.setText(DisplayUtils.getRelativeTimestamp(mContext,
                     file.getModificationTimestamp()));
+
+            itemViewHolder.overflowMenu.setOnClickListener(v -> onItemClickListener.onOverflowClicked(file));
         }
 
 //        private final ImageView shared;
@@ -270,6 +272,7 @@ public class OCFileListAdapter extends RecyclerView.Adapter<OCFileListAdapter.OC
         holder.favorite.setVisibility(file.getIsFavorite() ? View.VISIBLE : View.GONE);
         holder.offlineIcon.setVisibility(file.isAvailableOffline() ? View.VISIBLE : View.GONE);
 
+        holder.checkbox.setVisibility(View.GONE);
 
 //        if (OCFileListFragmentInterface.getColumnSize() > showFilenameColumnThreshold
 //                            && viewType == ViewType.GRID_ITEM) {
@@ -737,7 +740,9 @@ public class OCFileListAdapter extends RecyclerView.Adapter<OCFileListAdapter.OC
     }
 
     public interface OnItemClickListener {
-        void onItemClick(OCFile file);
+        void onItemClicked(OCFile file);
+
+        void onOverflowClicked(OCFile file);
     }
 
     static class OCFileListItemViewHolder extends OCFileListGridViewHolder {

@@ -328,7 +328,18 @@ public class OCFileListFragment extends ExtendedListFragment implements OCFileLi
         mJustFolders = (args != null) && args.getBoolean(ARG_JUST_FOLDERS, false);
         boolean hideItemOptions = (args != null) && args.getBoolean(ARG_HIDE_ITEM_OPTIONS, false);
 
-        OCFileListAdapter.OnItemClickListener onItemClickListener = this::onItemClick;
+        OCFileListAdapter.OnItemClickListener onItemClickListener = new OCFileListAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClicked(OCFile file) {
+                onItemClick(file);
+            }
+
+            @Override
+            public void onOverflowClicked(OCFile file) {
+                onOverflowIconClick(getRecyclerView(), file);
+            }
+        };
+        
 
         mAdapter = new OCFileListAdapter(mJustFolders, getActivity(), mContainerActivity, this, hideItemOptions, onItemClickListener, isGridViewPreferred(mFile));
 //        mAdapter.swapDirectory(mContainerActivity.getStorageManager().getFileByPath("/"), mContainerActivity.getStorageManager(), false);
