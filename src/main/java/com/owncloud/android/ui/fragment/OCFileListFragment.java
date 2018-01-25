@@ -937,8 +937,7 @@ public class OCFileListFragment extends ExtendedListFragment implements OCFileLi
                         if (mContainerActivity instanceof FolderPickerActivity &&
                                 ((FolderPickerActivity) mContainerActivity)
                                         .isDoNotEnterEncryptedFolder()) {
-                            Snackbar.make(getListView(),
-                                    R.string.copy_move_to_encrypted_folder_not_supported,
+                            Snackbar.make(getRecyclerView(), R.string.copy_move_to_encrypted_folder_not_supported,
                                     Snackbar.LENGTH_LONG).show();
                         } else {
                             listDirectory(file, MainApp.isOnlyOnDevice(), false);
