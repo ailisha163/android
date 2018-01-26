@@ -37,5 +37,7 @@ public interface OCFileListFragmentInterface {
 
     void onShareIconClick(OCFile file);
 
-    void onOverflowIconClick(View view, OCFile file);
+    void onOverflowIconClicked(OCFile file, View view);
+
+    void onItemClicked(OCFile file);
 }

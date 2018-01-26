@@ -24,6 +24,7 @@ package com.owncloud.android.ui.fragment;
 import android.animation.LayoutTransition;
 import android.app.Activity;
 import android.content.res.Configuration;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -97,8 +98,6 @@ public class ExtendedListFragment extends Fragment
 
     private ScaleGestureDetector mScaleGestureDetector = null;
     protected SwipeRefreshLayout mRefreshListLayout;
-
-    // TODO recycler
     protected SwipeRefreshLayout mRefreshEmptyLayout;
     protected LinearLayout mEmptyListContainer;
     protected TextView mEmptyListMessage;
@@ -120,6 +119,7 @@ public class ExtendedListFragment extends Fragment
     private OnEnforceableRefreshListener mOnRefreshListener = null;
 
     private RecyclerView mRecyclerView;
+    // TOOD recycler needed as field?
     private RecyclerView.Adapter mAdapter;
 
     protected SearchView searchView;
@@ -377,8 +377,7 @@ public class ExtendedListFragment extends Fragment
         Log_OC.d(TAG, "onCreateView");
 
         View v = inflater.inflate(R.layout.list_fragment, null);
-        // TODO recycler
-//        setupEmptyList(v);
+        setupEmptyList(v);
 
         mRecyclerView = v.findViewById(R.id.list_root);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -458,8 +457,6 @@ public class ExtendedListFragment extends Fragment
         // TODO recycler
 //        mCurrentListView = mRecyclerView;   // list by default
         if (savedInstanceState != null) {
-
-
             if (savedInstanceState.getBoolean(KEY_IS_GRID_VISIBLE, false)) {
                 switchToGridView();
             }
@@ -520,9 +517,9 @@ public class ExtendedListFragment extends Fragment
         mEmptyListMessage = view.findViewById(R.id.empty_list_view_text);
         mEmptyListHeadline = view.findViewById(R.id.empty_list_view_headline);
         mEmptyListIcon = view.findViewById(R.id.empty_list_icon);
-//        mEmptyListProgress = view.findViewById(R.id.empty_list_progress);
-//        mEmptyListProgress.getIndeterminateDrawable().setColorFilter(ThemeUtils.primaryColor(),
-//                PorterDuff.Mode.SRC_IN);
+        mEmptyListProgress = view.findViewById(R.id.empty_list_progress);
+        mEmptyListProgress.getIndeterminateDrawable().setColorFilter(ThemeUtils.primaryColor(),
+                PorterDuff.Mode.SRC_IN);
     }
 
     /**

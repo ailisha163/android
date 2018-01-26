@@ -274,6 +274,9 @@ public class OCFileListFragment extends ExtendedListFragment implements OCFileLi
         if (allowContextualActions) {
             setChoiceModeAsMultipleModal(savedInstanceState);
         }
+
+        mEmptyListContainer.setVisibility(View.VISIBLE);
+        
         Log_OC.i(TAG, "onCreateView() end");
         return v;
     }
@@ -328,24 +331,12 @@ public class OCFileListFragment extends ExtendedListFragment implements OCFileLi
         mJustFolders = (args != null) && args.getBoolean(ARG_JUST_FOLDERS, false);
         boolean hideItemOptions = (args != null) && args.getBoolean(ARG_HIDE_ITEM_OPTIONS, false);
 
-        OCFileListAdapter.OnItemClickListener onItemClickListener = new OCFileListAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClicked(OCFile file) {
-                onItemClick(file);
-            }
-
-            @Override
-            public void onOverflowClicked(OCFile file) {
-                onOverflowIconClick(getRecyclerView(), file);
-            }
-        };
-        
-
-        mAdapter = new OCFileListAdapter(mJustFolders, getActivity(), mContainerActivity, this, hideItemOptions, onItemClickListener, isGridViewPreferred(mFile));
-//        mAdapter.swapDirectory(mContainerActivity.getStorageManager().getFileByPath("/"), mContainerActivity.getStorageManager(), false);
+        mAdapter = new OCFileListAdapter(mJustFolders, getActivity(), mContainerActivity, this, hideItemOptions,
+                isGridViewPreferred(mFile));
         setRecyclerViewAdapter(mAdapter);
 
         mHideFab = (args != null) && args.getBoolean(ARG_HIDE_FAB, false);
+
         if (mHideFab) {
             setFabEnabled(false);
         } else {
@@ -546,24 +537,15 @@ public class OCFileListFragment extends ExtendedListFragment implements OCFileLi
     }
 
     @Override
-    public void onOverflowIconClick(View view, OCFile file) {
+    public void onOverflowIconClicked(OCFile file, View view) {
         PopupMenu popup = new PopupMenu(getActivity(), view);
         popup.inflate(R.menu.file_actions_menu);
-        FileMenuFilter mf = new FileMenuFilter(
-                mAdapter.getFiles().size(),
-                Collections.singleton(file),
-                ((FileActivity) getActivity()).getAccount(),
-                mContainerActivity,
-                getActivity(),
-                true
-        );
+        FileMenuFilter mf = new FileMenuFilter(mAdapter.getFiles().size(), Collections.singleton(file),
+                ((FileActivity) getActivity()).getAccount(), mContainerActivity, getActivity(), true);
         mf.filter(popup.getMenu(), true);
-        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                ArrayList<OCFile> checkedFiles = new ArrayList<>(Collections.singletonList(file));
-                return onFileActionChosen(item.getItemId(), checkedFiles);
-            }
+        popup.setOnMenuItemClickListener(item -> {
+            ArrayList<OCFile> checkedFiles = new ArrayList<>(Collections.singletonList(file));
+            return onFileActionChosen(item.getItemId(), checkedFiles);
         });
         popup.show();
     }
@@ -902,7 +884,9 @@ public class OCFileListFragment extends ExtendedListFragment implements OCFileLi
         return moveCount;
     }
 
-    public void onItemClick(OCFile file) {
+
+    @Override
+    public void onItemClicked(OCFile file) {
         // todo recycler 
         int position = 0;
         if (file != null) {
