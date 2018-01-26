@@ -26,6 +26,7 @@ package com.owncloud.android.ui.adapter;
 import android.accounts.Account;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Looper;
@@ -77,7 +78,7 @@ import java.util.Vector;
  * This Adapter populates a ListView with all files and folders in an ownCloud
  * instance.
  */
-public class OCFileListAdapter extends RecyclerView.Adapter<OCFileListAdapter.OCFileListGridViewHolder> {
+public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public static final int showFilenameColumnThreshold = 4;
     private final FileDownloader.FileDownloaderBinder downloaderBinder;
@@ -97,6 +98,9 @@ public class OCFileListAdapter extends RecyclerView.Adapter<OCFileListAdapter.OC
     private FilesFilter mFilesFilter;
     private OCFile currentDirectory;
     private static final String TAG = OCFileListAdapter.class.getSimpleName();
+
+    private static final int VIEWTYPE_ITEM = 0;
+    private static final int VIEWTYPE_FOOTER = 1;
 
     private ArrayList<ThumbnailsCacheManager.ThumbnailGenerationTask> asyncTasks = new ArrayList<>();
 
@@ -199,84 +203,100 @@ public class OCFileListAdapter extends RecyclerView.Adapter<OCFileListAdapter.OC
 
     @Override
     public int getItemCount() {
-        return mFiles.size();
+        return mFiles.size() + 1;
     }
 
     @Override
-    public OCFileListGridViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        if (gridView) {
-            View itemView = LayoutInflater.from(mContext).inflate(R.layout.grid_item, parent, false);
-            return new OCFileListGridViewHolder(itemView);
-        } else {
-            View itemView = LayoutInflater.from(mContext).inflate(R.layout.list_item, parent, false);
-            return new OCFileListItemViewHolder(itemView);
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        switch (viewType) {
+            default:
+            case VIEWTYPE_ITEM:
+                if (gridView) {
+                    View itemView = LayoutInflater.from(mContext).inflate(R.layout.grid_item, parent, false);
+                    return new OCFileListGridViewHolder(itemView);
+                } else {
+                    View itemView = LayoutInflater.from(mContext).inflate(R.layout.list_item, parent, false);
+                    return new OCFileListItemViewHolder(itemView);
+                }
+
+            case VIEWTYPE_FOOTER:
+                View itemView = LayoutInflater.from(mContext).inflate(R.layout.list_footer, parent, false);
+                return new OCFileListFooterViewHolder(itemView);
         }
     }
 
     @Override
-    public void onBindViewHolder(OCFileListGridViewHolder holder, int position) {
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         // TODO handle if file is null: if (mFiles != null && mFiles.size() > position)
-        OCFile file = mFiles.get(position);
 
-        boolean gridImage = MimeTypeUtil.isImage(file) || MimeTypeUtil.isVideo(file);
+        if (holder instanceof OCFileListFooterViewHolder) {
+            ((OCFileListFooterViewHolder) holder).footerText.setText(getFooterText());
 
-        holder.thumbnail.setTag(file.getFileId());
-        setThumbnail(file, holder.thumbnail);
+        } else {
+            OCFileListGridViewHolder gridViewHolder = (OCFileListGridViewHolder) holder;
 
-        holder.itemLayout.setOnClickListener(v -> ocFileListFragmentInterface.onItemClicked(file));
+            OCFile file = mFiles.get(position);
 
-        holder.fileName.setText(file.getFileName());
+            boolean gridImage = MimeTypeUtil.isImage(file) || MimeTypeUtil.isVideo(file);
 
-        if (holder instanceof OCFileListItemViewHolder) {
-            OCFileListItemViewHolder itemViewHolder = (OCFileListItemViewHolder) holder;
-            itemViewHolder.fileSize.setText(DisplayUtils.bytesToHumanReadable(file.getFileLength()));
-            itemViewHolder.lastModification.setText(DisplayUtils.getRelativeTimestamp(mContext,
-                    file.getModificationTimestamp()));
+            gridViewHolder.thumbnail.setTag(file.getFileId());
+            setThumbnail(file, gridViewHolder.thumbnail);
 
-            itemViewHolder.overflowMenu.setOnClickListener(view -> ocFileListFragmentInterface
-                    .onOverflowIconClicked(file, view));
-        }
+            gridViewHolder.itemLayout.setOnClickListener(v -> ocFileListFragmentInterface.onItemClicked(file));
+
+            gridViewHolder.fileName.setText(file.getFileName());
+
+            if (holder instanceof OCFileListItemViewHolder) {
+                OCFileListItemViewHolder itemViewHolder = (OCFileListItemViewHolder) holder;
+                itemViewHolder.fileSize.setText(DisplayUtils.bytesToHumanReadable(file.getFileLength()));
+                itemViewHolder.lastModification.setText(DisplayUtils.getRelativeTimestamp(mContext,
+                        file.getModificationTimestamp()));
+
+                itemViewHolder.overflowMenu.setOnClickListener(view -> ocFileListFragmentInterface
+                        .onOverflowIconClicked(file, view));
+            }
 
 //        private final ImageView shared;
 //        private final ImageView checkbox;
 //        private final ImageView overflowMenu;
 
-        holder.localFileIndicator.setVisibility(View.INVISIBLE);   // default first
+            gridViewHolder.localFileIndicator.setVisibility(View.INVISIBLE);   // default first
 
-        if (operationsServiceBinder != null && operationsServiceBinder.isSynchronizing(mAccount, file)) {
-            //synchronizing
-            holder.localFileIndicator.setImageResource(R.drawable.ic_synchronizing);
-            holder.localFileIndicator.setVisibility(View.VISIBLE);
+            if (operationsServiceBinder != null && operationsServiceBinder.isSynchronizing(mAccount, file)) {
+                //synchronizing
+                gridViewHolder.localFileIndicator.setImageResource(R.drawable.ic_synchronizing);
+                gridViewHolder.localFileIndicator.setVisibility(View.VISIBLE);
 
-        } else if (downloaderBinder != null && downloaderBinder.isDownloading(mAccount, file)) {
-            // downloading
-            holder.localFileIndicator.setImageResource(R.drawable.ic_synchronizing);
-            holder.localFileIndicator.setVisibility(View.VISIBLE);
+            } else if (downloaderBinder != null && downloaderBinder.isDownloading(mAccount, file)) {
+                // downloading
+                gridViewHolder.localFileIndicator.setImageResource(R.drawable.ic_synchronizing);
+                gridViewHolder.localFileIndicator.setVisibility(View.VISIBLE);
 
-        } else if (uploaderBinder != null && uploaderBinder.isUploading(mAccount, file)) {
-            //uploading
-            holder.localFileIndicator.setImageResource(R.drawable.ic_synchronizing);
-            holder.localFileIndicator.setVisibility(View.VISIBLE);
+            } else if (uploaderBinder != null && uploaderBinder.isUploading(mAccount, file)) {
+                //uploading
+                gridViewHolder.localFileIndicator.setImageResource(R.drawable.ic_synchronizing);
+                gridViewHolder.localFileIndicator.setVisibility(View.VISIBLE);
 
-        } else if (file.getEtagInConflict() != null) {
-            // conflict
-            holder.localFileIndicator.setImageResource(R.drawable.ic_synchronizing_error);
-            holder.localFileIndicator.setVisibility(View.VISIBLE);
+            } else if (file.getEtagInConflict() != null) {
+                // conflict
+                gridViewHolder.localFileIndicator.setImageResource(R.drawable.ic_synchronizing_error);
+                gridViewHolder.localFileIndicator.setVisibility(View.VISIBLE);
 
-        } else if (file.isDown()) {
-            holder.localFileIndicator.setImageResource(R.drawable.ic_synced);
-            holder.localFileIndicator.setVisibility(View.VISIBLE);
-        }
+            } else if (file.isDown()) {
+                gridViewHolder.localFileIndicator.setImageResource(R.drawable.ic_synced);
+                gridViewHolder.localFileIndicator.setVisibility(View.VISIBLE);
+            }
 
-        holder.favorite.setVisibility(file.getIsFavorite() ? View.VISIBLE : View.GONE);
-        holder.offlineIcon.setVisibility(file.isAvailableOffline() ? View.VISIBLE : View.GONE);
+            gridViewHolder.favorite.setVisibility(file.getIsFavorite() ? View.VISIBLE : View.GONE);
+            gridViewHolder.offlineIcon.setVisibility(file.isAvailableOffline() ? View.VISIBLE : View.GONE);
 
-        holder.checkbox.setVisibility(View.GONE);
+            gridViewHolder.checkbox.setVisibility(View.GONE);
 
 //        if (ocFileListFragmentInterface.getColumnSize() > showFilenameColumnThreshold
 //                            && viewType == ViewType.GRID_ITEM) {
 //                        fileName.setVisibility(View.GONE);
 //                    }
+        }
     }
 
     private void setThumbnail(OCFile file, ImageView thumbnailView) {
@@ -335,13 +355,58 @@ public class OCFileListAdapter extends RecyclerView.Adapter<OCFileListAdapter.OC
         }
     }
 
+    private String getFooterText() {
+        if (!mJustFolders) {
+            int filesCount = 0;
+            int foldersCount = 0;
+            int count = mFiles.size();
+            OCFile file;
+            for (int i = 0; i < count; i++) {
+                file = getItem(i);
+                if (file.isFolder()) {
+                    foldersCount++;
+                } else {
+                    if (!file.isHidden()) {
+                        filesCount++;
+                    }
+                }
+            }
+
+            return generateFooterText(filesCount, foldersCount);
+        } else {
+            return "";
+        }
+    }
+
+    private String generateFooterText(int filesCount, int foldersCount) {
+        String output;
+        Resources resources = mContext.getResources();
+
+        if (filesCount + foldersCount <= 0) {
+            output = "";
+        } else if (foldersCount <= 0) {
+            output = resources.getQuantityString(R.plurals.file_list__footer__file, filesCount, filesCount);
+        } else if (filesCount <= 0) {
+            output = resources.getQuantityString(R.plurals.file_list__footer__folder, foldersCount, foldersCount);
+        } else {
+            output = resources.getQuantityString(R.plurals.file_list__footer__file, filesCount, filesCount) + ", " +
+                    resources.getQuantityString(R.plurals.file_list__footer__folder, foldersCount, foldersCount);
+        }
+
+        return output;
+    }
+
     public OCFile getItem(int position) {
         return mFiles.get(position);
     }
 
     @Override
     public int getItemViewType(int position) {
-        return 0;
+        if (position == mFiles.size()) {
+            return VIEWTYPE_FOOTER;
+        } else {
+            return VIEWTYPE_ITEM;
+        }
     }
 
     // TODO recycler
@@ -760,6 +825,16 @@ public class OCFileListAdapter extends RecyclerView.Adapter<OCFileListAdapter.OC
             shared = itemView.findViewById(R.id.sharedIcon);
             checkbox = itemView.findViewById(R.id.custom_checkbox);
             itemLayout = itemView.findViewById(R.id.ListItemLayout);
+        }
+    }
+
+    static class OCFileListFooterViewHolder extends RecyclerView.ViewHolder {
+        private final TextView footerText;
+
+        private OCFileListFooterViewHolder(View itemView) {
+            super(itemView);
+
+            footerText = itemView.findViewById(R.id.footerText);
         }
     }
 }

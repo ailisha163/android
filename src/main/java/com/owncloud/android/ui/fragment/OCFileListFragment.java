@@ -528,7 +528,8 @@ public class OCFileListFragment extends ExtendedListFragment implements OCFileLi
 
     @Override
     public void finishedFiltering() {
-        updateFooter();
+        // TODO recycler        
+        // updateFooter();
     }
 
     @Override
@@ -1206,30 +1207,10 @@ public class OCFileListFragment extends ExtendedListFragment implements OCFileLi
         }
     }
 
-    private void updateFooter() {
-        if (!mJustFolders) {
-            int filesCount = 0;
-            int foldersCount = 0;
-            int count = mAdapter.getItemCount();
-            OCFile file;
-            for (int i = 0; i < count; i++) {
-                file = mAdapter.getItem(i);
-                if (file.isFolder()) {
-                    foldersCount++;
-                } else {
-                    if (!file.isHidden()) {
-                        filesCount++;
-                    }
-                }
-            }
-            // set footer text
-            setFooterText(generateFooterText(filesCount, foldersCount));
-        }
-    }
 
     private void updateLayout() {
         if (!mJustFolders) {
-            updateFooter();
+//            updateFooter();
             // decide grid vs list view
             OwnCloudVersion version = AccountUtils.getServerVersion(
                     ((FileActivity) mContainerActivity).getAccount());
@@ -1249,40 +1230,6 @@ public class OCFileListFragment extends ExtendedListFragment implements OCFileLi
         }
     }
 
-    private String generateFooterText(int filesCount, int foldersCount) {
-        String output = "";
-
-        if (getActivity() != null) {
-            if (filesCount + foldersCount <= 0) {
-                output = "";
-            } else if (foldersCount <= 0) {
-                output = getResources().getQuantityString(
-                        R.plurals.file_list__footer__file,
-                        filesCount,
-                        filesCount
-                );
-            } else if (filesCount <= 0) {
-                output = getResources().getQuantityString(
-                        R.plurals.file_list__footer__folder,
-                        foldersCount,
-                        foldersCount
-                );
-            } else {
-                output = getResources().getQuantityString(
-                        R.plurals.file_list__footer__file,
-                        filesCount,
-                        filesCount)
-                        + ", "
-                        + getResources().getQuantityString(
-                        R.plurals.file_list__footer__folder,
-                        foldersCount,
-                        foldersCount
-                );
-            }
-        }
-
-        return output;
-    }
 
     public void sortFiles(FileSortOrder sortOrder) {
         mAdapter.setSortOrder(mFile, sortOrder);
