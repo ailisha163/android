@@ -80,6 +80,7 @@ import java.util.Vector;
  */
 public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
+    // todo recycler
     public static final int showFilenameColumnThreshold = 4;
     private final FileDownloader.FileDownloaderBinder downloaderBinder;
     private final FileUploader.FileUploaderBinder uploaderBinder;
@@ -88,6 +89,7 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     private Vector<OCFile> mFilesAll = new Vector<>();
     private Vector<OCFile> mFiles = new Vector<>();
     private boolean mJustFolders;
+    // todo recycler
     private boolean mHideItemOptions;
     private boolean gridView = false;
 

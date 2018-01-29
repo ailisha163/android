@@ -23,30 +23,27 @@ package com.owncloud.android.ui.fragment;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ImageView;
 import android.widget.ListView;
 
 import com.owncloud.android.R;
 import com.owncloud.android.lib.common.utils.Log_OC;
 import com.owncloud.android.ui.adapter.LocalFileListAdapter;
+import com.owncloud.android.ui.interfaces.LocalFileListFragmentInterface;
 import com.owncloud.android.utils.AnalyticsUtils;
 import com.owncloud.android.utils.FileSortOrder;
 
 import java.io.File;
-import java.util.ArrayList;
 
 
 /**
  * A Fragment that lists all files and folders in a given LOCAL path.
  */
-public class LocalFileListFragment extends ExtendedListFragment {
+public class LocalFileListFragment extends ExtendedListFragment implements LocalFileListFragmentInterface {
     private static final String TAG = LocalFileListFragment.class.getSimpleName();
     
     /** Reference to the Activity which this fragment is attached to. For callbacks */
@@ -122,11 +119,8 @@ public class LocalFileListFragment extends ExtendedListFragment {
         
         super.onActivityCreated(savedInstanceState);
 
-        mAdapter = new LocalFileListAdapter(
-                mContainerActivity.isFolderPickerMode(),
-                mContainerActivity.getInitialDirectory(),
-                getActivity()
-        );
+        mAdapter = new LocalFileListAdapter(mContainerActivity.isFolderPickerMode(),
+                mContainerActivity.getInitialDirectory(), this, getActivity());
         setRecyclerViewAdapter(mAdapter);
         
         Log_OC.i(TAG, "onActivityCreated() stop");
@@ -144,14 +138,15 @@ public class LocalFileListFragment extends ExtendedListFragment {
             super.onCreateOptionsMenu(menu, inflater);
         }
     }
-    
+
+
     /**
      * Checks the file clicked over. Browses inside if it is a directory.
      * Notifies the container activity in any case.
      */
     @Override
-    public void onItemClick(AdapterView<?> l, View v, int position, long id) {
-        File file = (File) mAdapter.getItem(position); 
+    public void onItemClicked(File file) {
+//        File file = (File) mAdapter.getItem(position); 
         if (file != null) {
             /// Click on a directory
             if (file.isDirectory()) {
@@ -161,12 +156,23 @@ public class LocalFileListFragment extends ExtendedListFragment {
                 mContainerActivity.onDirectoryClick(file);
 
                 // save index and top position
-                saveIndexAndTopPosition(position);
+                // todo recycler
+//                saveIndexAndTopPosition(position);
             
             } else {    /// Click on a file
-                ImageView checkBoxV = v.findViewById(R.id.custom_checkbox);
-                if (checkBoxV != null) {
-                    // TODO recycler view
+                if (mAdapter.isCheckedFile(file)) {
+                    // uncheck
+                    mAdapter.removeCheckedFile(file);
+                } else {
+                    // check
+                    mAdapter.addCheckedFile(file);
+                }
+
+                mAdapter.notifyItemChanged(mAdapter.getItemPosition(file));
+
+                // TODO recycler view
+//                ImageView checkBoxV = v.findViewById(R.id.custom_checkbox);
+//                if (checkBoxV != null) {
 //                    if (getRecyclerView().isItemChecked(position)) {
 //                        v.setBackgroundColor(getContext().getResources().getColor(R.color.selected_item_background));
 //                        checkBoxV.setImageDrawable(ThemeUtils.tintDrawable(R.drawable.ic_checkbox_marked,
@@ -176,7 +182,7 @@ public class LocalFileListFragment extends ExtendedListFragment {
 //                        v.setBackgroundColor(Color.WHITE);
 //                        checkBoxV.setImageResource(R.drawable.ic_checkbox_blank_outline);
 //                    }
-                }
+//                }
                 // notify the change to the container Activity
                 mContainerActivity.onFileClick(file);
             }
@@ -269,20 +275,7 @@ public class LocalFileListFragment extends ExtendedListFragment {
      * @return      File paths to the files checked by the user.
      */
     public String[] getCheckedFilePaths() {
-        ArrayList<String> result = new ArrayList<>();
-        // TODO recycler view
-        SparseBooleanArray positions = new SparseBooleanArray(); // mCurrentListView.getCheckedItemPositions();
-        if (positions.size() > 0) {
-            for (int i = 0; i < positions.size(); i++) {
-                if (positions.get(positions.keyAt(i))) {
-                    // TODO recycler view
-//                    result.add(((File) mCurrentListView.getItemAtPosition(positions.keyAt(i))).getAbsolutePath());
-                }
-            }
-
-            Log_OC.d(TAG, "Returning " + result.size() + " selected files");
-        }
-        return result.toArray(new String[result.size()]);
+        return mAdapter.getCheckedFilesPath();
     }
 
     public void sortFiles(FileSortOrder sortOrder) {
