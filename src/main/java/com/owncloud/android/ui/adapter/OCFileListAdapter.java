@@ -28,15 +28,14 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.Filter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -67,10 +66,13 @@ import com.owncloud.android.utils.DisplayUtils;
 import com.owncloud.android.utils.FileSortOrder;
 import com.owncloud.android.utils.FileStorageUtils;
 import com.owncloud.android.utils.MimeTypeUtil;
+import com.owncloud.android.utils.ThemeUtils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.Vector;
 
 
@@ -92,6 +94,8 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     // todo recycler
     private boolean mHideItemOptions;
     private boolean gridView = false;
+    private boolean multiSelect = false;
+    private Set<OCFile> checkedFiles;
 
     private FileDataStorageManager mStorageManager;
     private Account mAccount;
@@ -116,6 +120,7 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         mAccount = AccountUtils.getCurrentOwnCloudAccount(mContext);
         mHideItemOptions = argHideItemOptions;
         this.gridView = gridView;
+        checkedFiles = new HashSet<>();
 
         downloaderBinder = transferServiceGetter.getFileDownloaderBinder();
         uploaderBinder = transferServiceGetter.getFileUploaderBinder();
@@ -123,6 +128,15 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
         // initialise thumbnails cache on background thread
         new ThumbnailsCacheManager.InitDiskCacheTask().execute();
+    }
+
+    public boolean isMultiSelect() {
+        return multiSelect;
+    }
+
+    public void setMultiSelect(boolean bool) {
+        multiSelect = bool;
+        notifyDataSetChanged();
     }
 
     // TODO recycler
@@ -148,6 +162,23 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 //        }
 //        return mFiles.get(position);
 //    }
+
+    public boolean isCheckedFile(OCFile file) {
+        return checkedFiles.contains(file);
+    }
+
+    public void removeCheckedFile(OCFile file) {
+        checkedFiles.remove(file);
+    }
+
+    public void addCheckedFile(OCFile file) {
+        checkedFiles.add(file);
+    }
+
+    public int getItemPosition(OCFile file) {
+        // todo recycler check difference between mFiles and mFilesAll
+        return mFiles.indexOf(file);
+    }
 
     public void setFavoriteAttributeForItemID(String fileId, boolean favorite) {
         for (int i = 0; i < mFiles.size(); i++) {
@@ -244,7 +275,20 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             gridViewHolder.thumbnail.setTag(file.getFileId());
             setThumbnail(file, gridViewHolder.thumbnail);
 
+            if (isCheckedFile(file)) {
+                gridViewHolder.itemLayout.setBackgroundColor(mContext.getResources()
+                        .getColor(R.color.selected_item_background));
+                gridViewHolder.checkbox.setImageDrawable(ThemeUtils.tintDrawable(R.drawable.ic_checkbox_marked,
+                        ThemeUtils.primaryColor()));
+            } else {
+                gridViewHolder.itemLayout.setBackgroundColor(Color.WHITE);
+                gridViewHolder.checkbox.setImageResource(R.drawable.ic_checkbox_blank_outline);
+            }
+
             gridViewHolder.itemLayout.setOnClickListener(v -> ocFileListFragmentInterface.onItemClicked(file));
+
+            gridViewHolder.itemLayout.setLongClickable(true);
+            gridViewHolder.itemLayout.setOnLongClickListener(v -> ocFileListFragmentInterface.onLongItemClicked(file));
 
             gridViewHolder.fileName.setText(file.getFileName());
 
@@ -254,8 +298,13 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 itemViewHolder.lastModification.setText(DisplayUtils.getRelativeTimestamp(mContext,
                         file.getModificationTimestamp()));
 
-                itemViewHolder.overflowMenu.setOnClickListener(view -> ocFileListFragmentInterface
-                        .onOverflowIconClicked(file, view));
+                if (multiSelect) {
+                    itemViewHolder.overflowMenu.setVisibility(View.GONE);
+                } else {
+                    itemViewHolder.overflowMenu.setVisibility(View.VISIBLE);
+                    itemViewHolder.overflowMenu.setOnClickListener(view -> ocFileListFragmentInterface
+                            .onOverflowIconClicked(file, view));
+                }
             }
 
 //        private final ImageView shared;
@@ -292,7 +341,11 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             gridViewHolder.favorite.setVisibility(file.getIsFavorite() ? View.VISIBLE : View.GONE);
             gridViewHolder.offlineIcon.setVisibility(file.isAvailableOffline() ? View.VISIBLE : View.GONE);
 
-            gridViewHolder.checkbox.setVisibility(View.GONE);
+            if (multiSelect) {
+                gridViewHolder.checkbox.setVisibility(View.VISIBLE);
+            } else {
+                gridViewHolder.checkbox.setVisibility(View.GONE);
+            }
 
 //        if (ocFileListFragmentInterface.getColumnSize() > showFilenameColumnThreshold
 //                            && viewType == ViewType.GRID_ITEM) {
@@ -357,6 +410,8 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         }
     }
 
+
+    // todo recycler extract to common
     private String getFooterText() {
         if (!mJustFolders) {
             int filesCount = 0;
@@ -684,20 +739,12 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         notifyDataSetChanged();
     }
 
+    public Set<OCFile> getCheckedItems() {
+        return checkedFiles;
+    }
 
-    public ArrayList<OCFile> getCheckedItems(AbsListView parentList) {
-        SparseBooleanArray checkedPositions = parentList.getCheckedItemPositions();
-        ArrayList<OCFile> files = new ArrayList<>();
-        Object item;
-        for (int i = 0; i < checkedPositions.size(); i++) {
-            if (checkedPositions.valueAt(i)) {
-                item = getItem(checkedPositions.keyAt(i));
-                if (item != null) {
-                    files.add((OCFile) item);
-                }
-            }
-        }
-        return files;
+    public void clearCheckedItems() {
+        checkedFiles.clear();
     }
 
     public Vector<OCFile> getFiles() {

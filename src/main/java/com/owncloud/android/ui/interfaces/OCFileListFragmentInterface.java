@@ -41,4 +41,6 @@ public interface OCFileListFragmentInterface {
     void onOverflowIconClicked(OCFile file, View view);
 
     void onItemClicked(OCFile file);
+
+    boolean onLongItemClicked(OCFile file);
 }

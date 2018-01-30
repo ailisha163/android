@@ -20,6 +20,7 @@
 package com.owncloud.android.ui.adapter;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -106,14 +107,12 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     @Override
     public int getItemCount() {
-        return mFiles != null ? mFiles.length : 0;
-//        return mFiles != null ? mFiles.length + 1 : 1;
+        return mFiles != null ? mFiles.length + 1 : 1;
     }
 
     @Override
     public int getCount() {
-//        return mFiles != null ? mFiles.length + 1 : 1;
-        return mFiles != null ? mFiles.length : 0;
+        return mFiles != null ? mFiles.length + 1 : 1;
     }
 
     @Override
@@ -160,9 +159,7 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         if (holder instanceof LocalFileListFooterViewHolder) {
-            // todo recycler
-            ((LocalFileListFooterViewHolder) holder).footerText.setText("123");
-
+            ((LocalFileListFooterViewHolder) holder).footerText.setText(getFooterText());
         } else {
             File file = null;
             if (mFiles != null && mFiles.length > position && mFiles[position] != null) {
@@ -276,7 +273,11 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     @Override
     public int getItemViewType(int position) {
-        return 0;
+        if (mFiles != null && position == mFiles.length) {
+            return VIEWTYPE_FOOTER;
+        } else {
+            return VIEWTYPE_ITEM;
+        }
     }
 
     @Override
@@ -456,6 +457,44 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
             }
         }
         return ret.toArray(new File[ret.size()]);
+    }
+
+    // todo recycler extract to common
+    private String getFooterText() {
+        int filesCount = 0;
+        int foldersCount = 0;
+        int count = mFiles.length;
+        File file;
+        for (int i = 0; i < count; i++) {
+            file = mFiles[i];
+            if (file.isDirectory()) {
+                foldersCount++;
+            } else {
+                if (!file.isHidden()) {
+                    filesCount++;
+                }
+            }
+        }
+
+        return generateFooterText(filesCount, foldersCount);
+    }
+
+    private String generateFooterText(int filesCount, int foldersCount) {
+        String output;
+        Resources resources = mContext.getResources();
+
+        if (filesCount + foldersCount <= 0) {
+            output = "";
+        } else if (foldersCount <= 0) {
+            output = resources.getQuantityString(R.plurals.file_list__footer__file, filesCount, filesCount);
+        } else if (filesCount <= 0) {
+            output = resources.getQuantityString(R.plurals.file_list__footer__folder, foldersCount, foldersCount);
+        } else {
+            output = resources.getQuantityString(R.plurals.file_list__footer__file, filesCount, filesCount) + ", " +
+                    resources.getQuantityString(R.plurals.file_list__footer__folder, foldersCount, foldersCount);
+        }
+
+        return output;
     }
 
     static class LocalFileListItemViewHolder extends LocalFileListGridViewHolder {
