@@ -381,6 +381,7 @@ public class ExtendedListFragment extends Fragment
         setupEmptyList(v);
 
         mRecyclerView = v.findViewById(R.id.list_root);
+        mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
 

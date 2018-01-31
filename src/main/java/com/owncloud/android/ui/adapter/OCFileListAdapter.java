@@ -88,8 +88,8 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     private final FileUploader.FileUploaderBinder uploaderBinder;
     private final OperationsService.OperationsServiceBinder operationsServiceBinder;
     private Context mContext;
-    private Vector<OCFile> mFilesAll = new Vector<>();
-    private Vector<OCFile> mFiles = new Vector<>();
+    private ArrayList<OCFile> mFilesAll = new ArrayList<>();
+    private ArrayList<OCFile> mFiles = new ArrayList<>();
     private boolean mJustFolders;
     // todo recycler
     private boolean mHideItemOptions;
@@ -285,6 +285,8 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 gridViewHolder.checkbox.setImageResource(R.drawable.ic_checkbox_blank_outline);
             }
 
+            // todo recyler verify if onclicklistener should be done in onBindViewHolder or onCreateViewHolder (maybe in later one, as it is only done once)
+            // https://proandroiddev.com/recyclerview-pro-tips-part-1-8a291594bafc tip 2 --> vh.getAdapterPosition() 
             gridViewHolder.itemLayout.setOnClickListener(v -> ocFileListFragmentInterface.onItemClicked(file));
 
             gridViewHolder.itemLayout.setLongClickable(true);
@@ -620,7 +622,7 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             mFiles = FileStorageUtils.sortOcFolderDescDateModified(mFiles);
         }
 
-        mFilesAll = new Vector<>();
+        mFilesAll.clear();
         mFilesAll.addAll(mFiles);
 
         new Handler(Looper.getMainLooper()).post(new Runnable() {
@@ -720,15 +722,15 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
      * @param files Collection of files to filter
      * @return Folders in the input
      */
-    public Vector<OCFile> getFolders(Vector<OCFile> files) {
-        Vector<OCFile> ret = new Vector<>();
-        OCFile current;
-        for (int i = 0; i < files.size(); i++) {
-            current = files.get(i);
-            if (current.isFolder()) {
-                ret.add(current);
+    public ArrayList<OCFile> getFolders(ArrayList<OCFile> files) {
+        ArrayList<OCFile> ret = new ArrayList<>();
+
+        for (OCFile file : files) {
+            if (file.isFolder()) {
+                ret.add(file);
             }
         }
+
         return ret;
     }
 
@@ -747,7 +749,7 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         checkedFiles.clear();
     }
 
-    public Vector<OCFile> getFiles() {
+    public ArrayList<OCFile> getFiles() {
         return mFiles;
     }
 
@@ -809,15 +811,15 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
      * @param files Collection of files to filter
      * @return Non-hidden files
      */
-    public Vector<OCFile> filterHiddenFiles(Vector<OCFile> files) {
-        Vector<OCFile> ret = new Vector<>();
-        OCFile current;
-        for (int i = 0; i < files.size(); i++) {
-            current = files.get(i);
-            if (!current.isHidden() && !ret.contains(current)) {
-                ret.add(current);
+    public ArrayList<OCFile> filterHiddenFiles(ArrayList<OCFile> files) {
+        ArrayList<OCFile> ret = new ArrayList<>();
+
+        for (OCFile file : files) {
+            if (!file.isHidden() && !ret.contains(file)) {
+                ret.add(file);
             }
         }
+
         return ret;
     }
 

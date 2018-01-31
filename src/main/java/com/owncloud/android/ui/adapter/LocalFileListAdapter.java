@@ -45,16 +45,13 @@ import com.owncloud.android.utils.MimeTypeUtil;
 import com.owncloud.android.utils.ThemeUtils;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.Vector;
 
 /**
  * This Adapter populates a ListView with all files and directories contained
@@ -65,9 +62,8 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
     private static final String TAG = LocalFileListAdapter.class.getSimpleName();
 
     private Context mContext;
-    // Todo change to vector
-    private File[] mFiles = null;
-    private Vector<File> mFilesAll = new Vector<>();
+    private ArrayList<File> mFiles = new ArrayList<>();
+    private ArrayList<File> mFilesAll = new ArrayList<>();
     private boolean mLocalFolderPicker;
     private boolean gridView = false;
     private LocalFileListFragmentInterface localFileListFragmentInterface;
@@ -107,20 +103,20 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     @Override
     public int getItemCount() {
-        return mFiles != null ? mFiles.length + 1 : 1;
+        return mFiles.size() + 1;
     }
 
     @Override
     public int getCount() {
-        return mFiles != null ? mFiles.length + 1 : 1;
+        return mFiles.size() + 1;
     }
 
     @Override
     public Object getItem(int position) {
-        if (mFiles == null || mFiles.length <= position) {
+        if (mFiles.size() <= position) {
             return null;
         }
-        return mFiles[position];
+        return mFiles.get(position);
     }
 
     public boolean isCheckedFile(File file) {
@@ -153,7 +149,7 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     @Override
     public long getItemId(int position) {
-        return mFiles != null && mFiles.length <= position ? position : -1;
+        return mFiles != null && mFiles.size() <= position ? position : -1;
     }
 
     @Override
@@ -162,8 +158,8 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
             ((LocalFileListFooterViewHolder) holder).footerText.setText(getFooterText());
         } else {
             File file = null;
-            if (mFiles != null && mFiles.length > position && mFiles[position] != null) {
-                file = mFiles[position];
+            if (mFiles != null && mFiles.size() > position && mFiles.get(position) != null) {
+                file = mFiles.get(position);
             }
 
             if (file != null) {
@@ -273,7 +269,7 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     @Override
     public int getItemViewType(int position) {
-        if (mFiles != null && position == mFiles.length) {
+        if (mFiles != null && position == mFiles.size()) {
             return VIEWTYPE_FOOTER;
         } else {
             return VIEWTYPE_ITEM;
@@ -365,7 +361,7 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     @Override
     public boolean isEmpty() {
-        return (mFiles == null || mFiles.length == 0);
+        return mFiles.size() == 0;
     }
 
     /**
@@ -374,41 +370,48 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
      */
     public void swapDirectory(final File directory) {
         if (mLocalFolderPicker) {
-            mFiles = (directory != null ? getFolders(directory) : null);
+            if (directory == null) {
+                mFiles.clear();
+            } else {
+                mFiles = getFolders(directory);
+            }
         } else {
-            mFiles = (directory != null ? directory.listFiles() : null);
+            if (directory == null) {
+                mFiles.clear();
+            } else {
+                mFiles = getFiles(directory);
+            }
         }
-        if (mFiles != null) {
-            Arrays.sort(mFiles, new Comparator<File>() {
-                @Override
-                public int compare(File lhs, File rhs) {
-                    if (lhs.isDirectory() && !rhs.isDirectory()) {
-                        return -1;
-                    } else if (!lhs.isDirectory() && rhs.isDirectory()) {
-                        return 1;
-                    }
-                    return compareNames(lhs, rhs);
+
+        Collections.sort(mFiles, new Comparator<File>() {
+            @Override
+            public int compare(File lhs, File rhs) {
+                if (lhs.isDirectory() && !rhs.isDirectory()) {
+                    return -1;
+                } else if (!lhs.isDirectory() && rhs.isDirectory()) {
+                    return 1;
                 }
-
-                private int compareNames(File lhs, File rhs) {
-                    return lhs.getName().toLowerCase(Locale.getDefault()).compareTo(
-                            rhs.getName().toLowerCase(Locale.getDefault()));
-                }
-            });
-
-            FileSortOrder sortOrder = PreferenceManager.getSortOrder(mContext, null);
-            mFiles = sortOrder.sortLocalFiles(mFiles);
-
-            // Fetch preferences for showing hidden files
-            boolean showHiddenFiles = PreferenceManager.showHiddenFilesEnabled(mContext);
-            if (!showHiddenFiles) {
-                mFiles = filterHiddenFiles(mFiles);
+                return compareNames(lhs, rhs);
             }
 
-            mFilesAll.clear();
+            private int compareNames(File lhs, File rhs) {
+                return lhs.getName().toLowerCase(Locale.getDefault()).compareTo(
+                        rhs.getName().toLowerCase(Locale.getDefault()));
+            }
+        });
 
-            Collections.addAll(mFilesAll, mFiles);
+        FileSortOrder sortOrder = PreferenceManager.getSortOrder(mContext, null);
+        mFiles = sortOrder.sortLocalFiles(mFiles);
+
+        // Fetch preferences for showing hidden files
+        boolean showHiddenFiles = PreferenceManager.showHiddenFilesEnabled(mContext);
+        if (!showHiddenFiles) {
+            mFiles = filterHiddenFiles(mFiles);
         }
+
+        mFilesAll.clear();
+        mFilesAll.addAll(mFiles);
+
         notifyDataSetChanged();
     }
 
@@ -418,18 +421,29 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
         notifyDataSetChanged();
     }
 
-    private File[] getFolders(final File directory) {
-        return directory.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isDirectory();
-            }
-        });
+    private ArrayList<File> getFolders(final File directory) {
+        File[] folders = directory.listFiles(File::isFile);
+
+        if (folders != null && folders.length > 0) {
+            return new ArrayList<>(Arrays.asList(folders));
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
+    private ArrayList<File> getFiles(final File directory) {
+        File[] files = directory.listFiles();
+
+        if (files != null && files.length > 0) {
+            return new ArrayList<>(Arrays.asList(files));
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     public void filter(String text) {
         if (text.isEmpty()) {
-            mFiles = mFilesAll.toArray(new File[1]);
+            mFiles = mFilesAll;
         } else {
             ArrayList<File> result = new ArrayList<>();
             text = text.toLowerCase(Locale.getDefault());
@@ -438,7 +452,7 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
                     result.add(file);
                 }
             }
-            mFiles = result.toArray(new File[1]);
+            mFiles = result;
         }
         notifyDataSetChanged();
     }
@@ -446,27 +460,26 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
     /**
      * Filter for hidden files
      *
-     * @param files             Array of files to filter
-     * @return Non-hidden files as an array
+     * @param files             ArrayList of files to filter
+     * @return Non-hidden files
      */
-    public File[] filterHiddenFiles(File[] files) {
-        List<File> ret = new ArrayList<>();
+    public ArrayList<File> filterHiddenFiles(ArrayList<File> files) {
+        ArrayList<File> ret = new ArrayList<>();
+        
         for (File file : files) {
             if (!file.isHidden()) {
                 ret.add(file);
             }
         }
-        return ret.toArray(new File[ret.size()]);
+        return ret;
     }
 
     // todo recycler extract to common
     private String getFooterText() {
         int filesCount = 0;
         int foldersCount = 0;
-        int count = mFiles.length;
-        File file;
-        for (int i = 0; i < count; i++) {
-            file = mFiles[i];
+
+        for (File file : mFiles) {
             if (file.isDirectory()) {
                 foldersCount++;
             } else {
