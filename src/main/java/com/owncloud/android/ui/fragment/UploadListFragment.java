@@ -61,8 +61,6 @@ public class UploadListFragment extends ExtendedListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = super.onCreateView(inflater, container, savedInstanceState);
-        // TODO recycler view
-//        getRecyclerView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         setMessageForEmptyList(
                 R.string.upload_list_empty_headline, R.string.upload_list_empty_text_auto_upload,
                 R.drawable.ic_list_empty_upload, true

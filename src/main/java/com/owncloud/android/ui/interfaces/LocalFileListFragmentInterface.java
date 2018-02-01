@@ -30,7 +30,6 @@ import java.io.File;
  */
 
 public interface LocalFileListFragmentInterface {
-    // todo recycler
     int getColumnSize();
 
     void onItemClicked(File file);

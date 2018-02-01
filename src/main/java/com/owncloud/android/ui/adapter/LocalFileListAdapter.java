@@ -1,4 +1,4 @@
-/**
+/*
  * ownCloud Android client application
  *
  * @author David A. Velasco
@@ -61,7 +61,10 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     private static final String TAG = LocalFileListAdapter.class.getSimpleName();
 
+    // todo recycler in common adapter
+    public static final int showFilenameColumnThreshold = 4;
     private Context mContext;
+    // todo recycler check difference between mFiles and mFilesAll
     private ArrayList<File> mFiles = new ArrayList<>();
     private ArrayList<File> mFilesAll = new ArrayList<>();
     private boolean mLocalFolderPicker;
@@ -88,17 +91,17 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     @Override
     public boolean isEnabled(int position) {
-        return true;
+        // footer is not enabled
+        return position < getItemCount();
     }
 
     @Override
     public void registerDataSetObserver(DataSetObserver observer) {
-
+        // not needed
     }
 
-    @Override
     public void unregisterDataSetObserver(DataSetObserver observer) {
-
+        // not needed
     }
 
     @Override
@@ -113,9 +116,6 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     @Override
     public Object getItem(int position) {
-        if (mFiles.size() <= position) {
-            return null;
-        }
         return mFiles.get(position);
     }
 
@@ -129,6 +129,14 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     public void addCheckedFile(File file) {
         checkedFiles.add(file);
+    }
+
+    public void addAllFilesToCheckedFiles() {
+        checkedFiles.addAll(mFiles);
+    }
+
+    public void removeAllFilesFromCheckedFiles() {
+        checkedFiles.clear();
     }
 
     public int getItemPosition(File file) {
@@ -149,7 +157,7 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     @Override
     public long getItemId(int position) {
-        return mFiles != null && mFiles.size() <= position ? position : -1;
+        return mFiles.size() <= position ? position : -1;
     }
 
     @Override
@@ -158,7 +166,7 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
             ((LocalFileListFooterViewHolder) holder).footerText.setText(getFooterText());
         } else {
             File file = null;
-            if (mFiles != null && mFiles.size() > position && mFiles.get(position) != null) {
+            if (mFiles.size() > position && mFiles.get(position) != null) {
                 file = mFiles.get(position);
             }
 
@@ -175,8 +183,6 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
                     gridViewHolder.itemLayout.setBackgroundColor(Color.WHITE);
                     gridViewHolder.checkbox.setImageResource(R.drawable.ic_checkbox_blank_outline);
                 }
-
-                boolean gridImage = MimeTypeUtil.isImage(file) || MimeTypeUtil.isVideo(file);
 
                 gridViewHolder.thumbnail.setTag(file.hashCode());
                 setThumbnail(file, gridViewHolder.thumbnail);
@@ -208,11 +214,12 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
                             file.lastModified()));
                 }
 
-                // Todo recycler
-//        if (ocFileListFragmentInterface.getColumnSize() > showFilenameColumnThreshold
-//                            && viewType == ViewType.GRID_ITEM) {
-//                        fileName.setVisibility(View.GONE);
-//                    }
+                if (gridView && (MimeTypeUtil.isImage(file) || MimeTypeUtil.isVideo(file) ||
+                        localFileListFragmentInterface.getColumnSize() > showFilenameColumnThreshold)) {
+                    gridViewHolder.fileName.setVisibility(View.GONE);
+                } else {
+                    gridViewHolder.fileName.setVisibility(View.VISIBLE);
+                }
             }
         }
     }
@@ -269,7 +276,7 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     @Override
     public int getItemViewType(int position) {
-        if (mFiles != null && position == mFiles.size()) {
+        if (position == mFiles.size()) {
             return VIEWTYPE_FOOTER;
         } else {
             return VIEWTYPE_ITEM;
@@ -353,15 +360,9 @@ public class LocalFileListAdapter extends RecyclerView.Adapter<RecyclerView.View
         return 1;
     }
 
-    // todo recycler
-//    @Override
-//    public boolean hasStableIds() {
-//        return false;
-//    }
-
     @Override
     public boolean isEmpty() {
-        return mFiles.size() == 0;
+        return mFiles.isEmpty();
     }
 
     /**

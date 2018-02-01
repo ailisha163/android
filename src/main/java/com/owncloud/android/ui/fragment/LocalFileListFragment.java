@@ -28,7 +28,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 
 import com.owncloud.android.R;
 import com.owncloud.android.lib.common.utils.Log_OC;
@@ -94,7 +93,6 @@ public class LocalFileListFragment extends ExtendedListFragment implements Local
         View v = super.onCreateView(inflater, container, savedInstanceState);
 
         if(!mContainerActivity.isFolderPickerMode()) {
-            setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
             setMessageForEmptyList(R.string.file_list_empty_headline, R.string.local_file_list_empty,
                     R.drawable.ic_list_empty_folder, true);
         } else {
@@ -170,19 +168,6 @@ public class LocalFileListFragment extends ExtendedListFragment implements Local
 
                 mAdapter.notifyItemChanged(mAdapter.getItemPosition(file));
 
-                // TODO recycler view
-//                ImageView checkBoxV = v.findViewById(R.id.custom_checkbox);
-//                if (checkBoxV != null) {
-//                    if (getRecyclerView().isItemChecked(position)) {
-//                        v.setBackgroundColor(getContext().getResources().getColor(R.color.selected_item_background));
-//                        checkBoxV.setImageDrawable(ThemeUtils.tintDrawable(R.drawable.ic_checkbox_marked,
-//                                ThemeUtils.primaryColor()));
-//
-//                    } else {
-//                        v.setBackgroundColor(Color.WHITE);
-//                        checkBoxV.setImageResource(R.drawable.ic_checkbox_blank_outline);
-//                    }
-//                }
                 // notify the change to the container Activity
                 mContainerActivity.onFileClick(file);
             }
@@ -288,14 +273,17 @@ public class LocalFileListFragment extends ExtendedListFragment implements Local
      * @param select <code>true</code> to select all, <code>false</code> to deselect all
      */
     public void selectAllFiles(boolean select) {
-        // TODO recycler view
-//        AbsListView listView = getRecyclerView();
-//        for (int position = 0; position < listView.getCount(); position++) {
-//            File file = (File) mAdapter.getItem(position);
-//            if (file.isFile()) {
-//                listView.setItemChecked(position, select);
-//            }
-//        }
+        LocalFileListAdapter localFileListAdapter = (LocalFileListAdapter) getRecyclerView().getAdapter();
+
+        if (select) {
+            localFileListAdapter.addAllFilesToCheckedFiles();
+        } else {
+            localFileListAdapter.removeAllFilesFromCheckedFiles();
+        }
+
+        for (int i = 0; i < mAdapter.getItemCount(); i++) {
+            mAdapter.notifyItemChanged(i);
+        }
     }
     
     /**

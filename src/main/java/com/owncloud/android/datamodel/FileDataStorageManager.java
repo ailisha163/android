@@ -2178,7 +2178,6 @@ public class FileDataStorageManager {
         }
 
         if (onlyImages) {
-            OCFile current;
             ArrayList<OCFile> temp = new ArrayList<>();
 
             for (OCFile file : temp) {

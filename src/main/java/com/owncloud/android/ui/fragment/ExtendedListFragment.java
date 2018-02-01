@@ -50,7 +50,6 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
@@ -94,15 +93,12 @@ public class ExtendedListFragment extends Fragment
     private static final String KEY_IS_GRID_VISIBLE = "IS_GRID_VISIBLE";
     public static final float minColumnSize = 2.0f;
 
-    // todo recycler
     private int maxColumnSize = 5;
     private int maxColumnSizePortrait = 5;
     private int maxColumnSizeLandscape = 10;
 
     private ScaleGestureDetector mScaleGestureDetector = null;
     protected SwipeRefreshLayout mRefreshListLayout;
-    // todo recycler
-//    protected SwipeRefreshLayout mRefreshEmptyLayout;
     protected LinearLayout mEmptyListContainer;
     protected TextView mEmptyListMessage;
     protected TextView mEmptyListHeadline;
@@ -123,8 +119,6 @@ public class ExtendedListFragment extends Fragment
     private OnEnforceableRefreshListener mOnRefreshListener = null;
 
     private EmptyRecyclerView mRecyclerView;
-    // TODO recycler needed as field?
-    private RecyclerView.Adapter mAdapter;
 
     protected SearchView searchView;
     private Handler handler = new Handler();
@@ -150,10 +144,8 @@ public class ExtendedListFragment extends Fragment
         SHARED_FILTER
     }
 
-    // TODO recycler view
     protected void setRecyclerViewAdapter(RecyclerView.Adapter recyclerViewAdapter) {
-        mAdapter = recyclerViewAdapter;
-        mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.setAdapter(recyclerViewAdapter);
     }
 
     protected RecyclerView getRecyclerView() {
@@ -178,24 +170,14 @@ public class ExtendedListFragment extends Fragment
 
     public void switchToGridView() {
         if (!isGridEnabled()) {
+            // todo recycler get correct column size
             getRecyclerView().setLayoutManager(new GridLayoutManager(getContext(), 3));
-            // TODO recycler view
-//            mRecyclerView.setAdapter(null);
-//            mRefreshListLayout.setVisibility(View.GONE);
-//            mRefreshGridLayout.setVisibility(View.VISIBLE);
-//            mCurrentListView = mGridView;
-//            setRecyclerViewAdapter(mAdapter);
         }
     }
 
     public void switchToListView() {
         if (isGridEnabled()) {
             getRecyclerView().setLayoutManager(new LinearLayoutManager(getContext()));
-//            mGridView.setAdapter(null);
-//            mRefreshGridLayout.setVisibility(View.GONE);
-//            mRefreshListLayout.setVisibility(View.VISIBLE);
-//            mCurrentListView = mRecyclerView;
-//            setRecyclerViewAdapter(mAdapter);
         }
     }
 
@@ -419,13 +401,7 @@ public class ExtendedListFragment extends Fragment
 
         // Pull-down to refresh layout
         mRefreshListLayout = v.findViewById(R.id.swipe_containing_list);
-//        mRefreshEmptyLayout = v.findViewById(R.id.swipe_containing_empty);
-
         onCreateSwipeToRefresh(mRefreshListLayout);
-//        onCreateSwipeToRefresh(mRefreshEmptyLayout);
-
-        // TODO recycler
-//        mRecyclerView.setEmptyView(mRefreshEmptyLayout);
 
         mFabMain = v.findViewById(R.id.fab_main);
         mFabUpload = v.findViewById(R.id.fab_upload);
@@ -448,8 +424,6 @@ public class ExtendedListFragment extends Fragment
             layoutParams.setMargins(0, 0, pixel / 2, bottomNavigationView.getMeasuredHeight() + pixel * 2);
         }
 
-        // TODO recycler
-//        mCurrentListView = mRecyclerView;   // list by default
         if (savedInstanceState != null) {
             if (savedInstanceState.getBoolean(KEY_IS_GRID_VISIBLE, false)) {
                 switchToGridView();
@@ -487,7 +461,7 @@ public class ExtendedListFragment extends Fragment
 
             PreferenceManager.setGridColumns(getContext(), mScale);
 
-            mAdapter.notifyDataSetChanged();
+            getRecyclerView().getAdapter().notifyDataSetChanged();
 
             return true;
         }
@@ -546,7 +520,6 @@ public class ExtendedListFragment extends Fragment
         super.onSaveInstanceState(savedInstanceState);
         Log_OC.d(TAG, "onSaveInstanceState()");
         savedInstanceState.putBoolean(KEY_IS_GRID_VISIBLE, isGridEnabled());
-        savedInstanceState.putInt(KEY_SAVED_LIST_POSITION, getReferencePosition());
         savedInstanceState.putIntegerArrayList(KEY_INDEXES, mIndexes);
         savedInstanceState.putIntegerArrayList(KEY_FIRST_POSITIONS, mFirstPositions);
         savedInstanceState.putIntegerArrayList(KEY_TOPS, mTops);
@@ -556,31 +529,9 @@ public class ExtendedListFragment extends Fragment
         PreferenceManager.setGridColumns(getContext(), mScale);
     }
 
-    /**
-     * Calculates the position of the item that will be used as a reference to
-     * reposition the visible items in the list when the device is turned to
-     * other position.
-     * <p>
-     * The current policy is take as a reference the visible item in the center
-     * of the screen.
-     *
-     * @return The position in the list of the visible item in the center of the
-     * screen.
-     */
-    protected int getReferencePosition() {
-        // TODO recycler view
-//        if (mCurrentListView != null) {
-//            return (mCurrentListView.getFirstVisiblePosition() +
-//                    mCurrentListView.getLastVisiblePosition()) / 2;
-//        } else {
-            return 0;
-//        }
-    }
-
     public int getColumnSize() {
         return Math.round(mScale);
     }
-
 
     /*
      * Restore index and position
@@ -658,7 +609,6 @@ public class ExtendedListFragment extends Fragment
         }
 
         mRefreshListLayout.setRefreshing(false);
-//        mRefreshEmptyLayout.setRefreshing(false);
 
         if (mOnRefreshListener != null) {
             mOnRefreshListener.onRefresh();
@@ -870,70 +820,9 @@ public class ExtendedListFragment extends Fragment
     @Override
     public void onRefresh(boolean ignoreETag) {
         mRefreshListLayout.setRefreshing(false);
-//        mRefreshEmptyLayout.setRefreshing(false);
 
         if (mOnRefreshListener != null) {
             mOnRefreshListener.onRefresh(ignoreETag);
-        }
-    }
-
-    protected void setChoiceMode(int choiceMode) {
-        // TODO recycler
-//        mRecyclerView.setChoiceMode(choiceMode);
-//        mGridView.setChoiceMode(choiceMode);
-    }
-
-    protected void setMultiChoiceModeListener(AbsListView.MultiChoiceModeListener listener) {
-        // TODO recycler
-//        mRecyclerView.setMultiChoiceModeListener(listener);
-//        mGridView.setMultiChoiceModeListener(listener);
-    }
-
-    /**
-     * TODO doc
-     * To be called before setAdapter, or GridViewWithHeaderAndFooter will throw an exception
-     *
-     * @param enabled flag if footer should be shown/calculated
-     */
-    protected void setFooterEnabled(boolean enabled) {
-        if (enabled) {
-            // TODO recycler
-//            if (mGridView.getFooterViewCount() == 0 && mGridView.isCorrectAdapter()) {
-//                if (mGridFooterView.getParent() != null) {
-//                    ((ViewGroup) mGridFooterView.getParent()).removeView(mGridFooterView);
-//                }
-//                mGridView.addFooterView(mGridFooterView, null, false);
-//            }
-//            mGridFooterView.invalidate();
-
-//            if (mRecyclerView.getFooterViewsCount() == 0) {
-//                if (mListFooterView.getParent() != null) {
-//                    ((ViewGroup) mListFooterView.getParent()).removeView(mListFooterView);
-//                }
-//                mRecyclerView.addFooterView(mListFooterView, null, false);
-//            }
-//            mListFooterView.invalidate();
-
-        } else {
-//            mGridView.removeFooterView(mGridFooterView);
-//            mRecyclerView.removeFooterView(mListFooterView);
-        }
-    }
-
-    /**
-     * set the list/grid footer text.
-     *
-     * @param text the footer text
-     */
-    protected void setFooterText(String text) {
-        if (text != null && text.length() > 0) {
-            // TODO recycler
-//            ((TextView) mListFooterView.findViewById(R.id.footerText)).setText(text);
-//            ((TextView) mGridFooterView.findViewById(R.id.footerText)).setText(text);
-            setFooterEnabled(true);
-
-        } else {
-            setFooterEnabled(false);
         }
     }
 
@@ -949,8 +838,8 @@ public class ExtendedListFragment extends Fragment
             maxColumnSize = maxColumnSizePortrait;
         }
 
-        // TODO recycler
-//        if (mGridView != null && mGridView.getNumColumns() > maxColumnSize) {
+        // todo recycler
+//        if (getColumnSize() > maxColumnSize) {
 //            mGridView.setNumColumns(maxColumnSize);
 //            mGridView.invalidateViews();
 //        }

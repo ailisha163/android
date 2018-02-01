@@ -33,7 +33,6 @@ import com.owncloud.android.ui.adapter.OCFileListAdapter;
 public interface OCFileListFragmentInterface {
     void finishedFiltering();
 
-    // todo recycler
     int getColumnSize();
 
     void onShareIconClick(OCFile file);

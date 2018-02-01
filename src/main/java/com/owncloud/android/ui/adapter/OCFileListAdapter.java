@@ -72,7 +72,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Locale;
-import java.util.Set;
 import java.util.Vector;
 
 
@@ -82,20 +81,20 @@ import java.util.Vector;
  */
 public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    // todo recycler
+    // todo recycler in common adapter
     public static final int showFilenameColumnThreshold = 4;
     private final FileDownloader.FileDownloaderBinder downloaderBinder;
     private final FileUploader.FileUploaderBinder uploaderBinder;
     private final OperationsService.OperationsServiceBinder operationsServiceBinder;
     private Context mContext;
-    private ArrayList<OCFile> mFilesAll = new ArrayList<>();
+    // todo recycler check difference between mFiles and mFilesAll
     private ArrayList<OCFile> mFiles = new ArrayList<>();
+    private ArrayList<OCFile> mFilesAll = new ArrayList<>();
     private boolean mJustFolders;
-    // todo recycler
     private boolean mHideItemOptions;
     private boolean gridView = false;
     private boolean multiSelect = false;
-    private Set<OCFile> checkedFiles;
+    private HashSet<OCFile> checkedFiles;
 
     private FileDataStorageManager mStorageManager;
     private Account mAccount;
@@ -139,30 +138,6 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         notifyDataSetChanged();
     }
 
-    // TODO recycler
-//    @Override
-//    public boolean areAllItemsEnabled() {
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean isEnabled(int position) {
-//        return true;
-//    }
-//
-//    @Override
-//    public int getCount() {
-//        return mFiles != null ? mFiles.size() : 0;
-//    }
-//
-//    @Override
-//    public Object getItem(int position) {
-//        if (mFiles == null || mFiles.size() <= position) {
-//            return null;
-//        }
-//        return mFiles.get(position);
-//    }
-
     public boolean isCheckedFile(OCFile file) {
         return checkedFiles.contains(file);
     }
@@ -175,8 +150,15 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         checkedFiles.add(file);
     }
 
+    public void addAllFilesToCheckedFiles() {
+        checkedFiles.addAll(mFiles);
+    }
+
+    public void removeAllFilesFromCheckedFiles() {
+        checkedFiles.clear();
+    }
+
     public int getItemPosition(OCFile file) {
-        // todo recycler check difference between mFiles and mFilesAll
         return mFiles.indexOf(file);
     }
 
@@ -300,7 +282,7 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 itemViewHolder.lastModification.setText(DisplayUtils.getRelativeTimestamp(mContext,
                         file.getModificationTimestamp()));
 
-                if (multiSelect) {
+                if (multiSelect || gridView || mHideItemOptions) {
                     itemViewHolder.overflowMenu.setVisibility(View.GONE);
                 } else {
                     itemViewHolder.overflowMenu.setVisibility(View.VISIBLE);
@@ -308,10 +290,6 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                             .onOverflowIconClicked(file, view));
                 }
             }
-
-//        private final ImageView shared;
-//        private final ImageView checkbox;
-//        private final ImageView overflowMenu;
 
             gridViewHolder.localFileIndicator.setVisibility(View.INVISIBLE);   // default first
 
@@ -349,10 +327,21 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 gridViewHolder.checkbox.setVisibility(View.GONE);
             }
 
-//        if (ocFileListFragmentInterface.getColumnSize() > showFilenameColumnThreshold
-//                            && viewType == ViewType.GRID_ITEM) {
-//                        fileName.setVisibility(View.GONE);
-//                    }
+            if (gridView && gridImage) {
+                gridViewHolder.fileName.setVisibility(View.GONE);
+            } else {
+                if (gridView && ocFileListFragmentInterface.getColumnSize() > showFilenameColumnThreshold) {
+                    gridViewHolder.fileName.setVisibility(View.GONE);
+                } else {
+                    gridViewHolder.fileName.setVisibility(View.VISIBLE);
+                }
+            }
+
+            if (mHideItemOptions) {
+                gridViewHolder.shared.setVisibility(View.GONE);
+            } else {
+                showShareIcon(gridViewHolder, file);
+            }
         }
     }
 
@@ -468,86 +457,24 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         }
     }
 
-    // TODO recycler
-//    @Override
-//    public View getView(int position, View convertView, ViewGroup parent) {
-
-//            ImageView checkBoxV = view.findViewById(R.id.custom_checkbox);
-//            view.setBackgroundColor(Color.WHITE);
-//
-//            AbsListView parentList = (AbsListView) parent;
-//
-//            if (parentList.getChoiceMode() != AbsListView.CHOICE_MODE_NONE && parentList.getCheckedItemCount() > 0) {
-//                if (parentList.isItemChecked(position)) {
-//                    view.setBackgroundColor(mContext.getResources().getColor(R.color.selected_item_background));
-//                    checkBoxV.setImageDrawable(ThemeUtils.tintDrawable(R.drawable.ic_checkbox_marked,
-//                            ThemeUtils.primaryColor()));
-//                } else {
-//                    view.setBackgroundColor(Color.WHITE);
-//                    checkBoxV.setImageResource(R.drawable.ic_checkbox_blank_outline);
-//                }
-//                checkBoxV.setVisibility(View.VISIBLE);
-//                hideShareIcon(view);
-//                hideOverflowMenuIcon(view, viewType);
-//            } else {
-//                checkBoxV.setVisibility(View.GONE);
-//
-//                if (mHideItemOptions) {
-//                    ImageView sharedIconView = view.findViewById(R.id.sharedIcon);
-//                    sharedIconView.setVisibility(View.GONE);
-//
-//                    ImageView overflowIndicatorView = view.findViewById(R.id.overflow_menu);
-//                    overflowIndicatorView.setVisibility(View.GONE);
-//                } else {
-//                    showShareIcon(view, file);
-//                    showOverflowMenuIcon(view, file, viewType);
-//                }
-//            }
-
-    private void showShareIcon(View view, OCFile file) {
-        ImageView sharedIconV = view.findViewById(R.id.sharedIcon);
-        sharedIconV.setVisibility(View.VISIBLE);
+    private void showShareIcon(OCFileListGridViewHolder gridViewHolder, OCFile file) {
+        ImageView sharedIconView = gridViewHolder.shared;
+        sharedIconView.setVisibility(View.VISIBLE);
+        
         if (file.isSharedWithSharee() || file.isSharedWithMe()) {
-            sharedIconV.setImageResource(R.drawable.shared_via_users);
+            sharedIconView.setImageResource(R.drawable.shared_via_users);
         } else if (file.isSharedViaLink()) {
-            sharedIconV.setImageResource(R.drawable.shared_via_link);
+            sharedIconView.setImageResource(R.drawable.shared_via_link);
         } else {
-            sharedIconV.setImageResource(R.drawable.ic_unshared);
+            sharedIconView.setImageResource(R.drawable.ic_unshared);
         }
-        sharedIconV.setOnClickListener(new View.OnClickListener() {
+        sharedIconView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 ocFileListFragmentInterface.onShareIconClick(file);
             }
         });
     }
-
-    private void hideShareIcon(View view) {
-        view.findViewById(R.id.sharedIcon).setVisibility(View.GONE);
-    }
-
-    private void hideOverflowMenuIcon(View view, ViewType viewType) {
-        if (ViewType.LIST_ITEM.equals(viewType)) {
-            ImageView overflowIndicatorV = view.findViewById(R.id.overflow_menu);
-            overflowIndicatorV.setVisibility(View.GONE);
-        }
-    }
-
-    // todo recycler
-//    @Override
-//    public int getViewTypeCount() {
-//        return 1;
-//    }
-//
-//    @Override
-//    public boolean hasStableIds() {
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean isEmpty() {
-//        return (mFiles == null || mFiles.isEmpty());
-//    }
 
     /**
      * Change the adapted directory for a new one
@@ -741,8 +668,12 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         notifyDataSetChanged();
     }
 
-    public Set<OCFile> getCheckedItems() {
+    public HashSet<OCFile> getCheckedItems() {
         return checkedFiles;
+    }
+
+    public void setCheckedItem(HashSet<OCFile> files) {
+        checkedFiles = files;
     }
 
     public void clearCheckedItems() {
