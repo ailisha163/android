@@ -35,32 +35,14 @@
             android:footerDividersEnabled="false"
             android:visibility="visible">
 
-            <android.support.v7.widget.RecyclerView
+            <com.owncloud.android.ui.EmptyRecyclerView
                 android:id="@+id/list_root"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:descendantFocusability="blocksDescendants"
-                android:divider="@color/list_divider_background"
-                android:dividerHeight="1px"
-                android:scrollbars="vertical"
-                android:visibility="visible"/>
-
+                />
         </android.support.v4.widget.SwipeRefreshLayout>
 
-        <android.support.v4.widget.SwipeRefreshLayout
-            android:id="@+id/swipe_containing_empty"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone">
-
-            <ScrollView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <include layout="@layout/empty_list"/>
-            </ScrollView>
-        </android.support.v4.widget.SwipeRefreshLayout>
-
+        <include layout="@layout/empty_list"/>
 
     </android.support.design.widget.CoordinatorLayout>
 

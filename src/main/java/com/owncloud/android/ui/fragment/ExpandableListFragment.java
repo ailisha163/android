@@ -1,4 +1,4 @@
-/**
+/*
  *   ownCloud Android client application
  *
  *   Copyright (C) 2012 Bartek Przybylski
@@ -62,6 +62,7 @@ public class ExpandableListFragment extends ExtendedListFragment implements OnCh
         mList.setDivider(getResources().getDrawable(R.drawable.uploader_list_separator));
         mList.setDividerHeight(1);
 
+        // todo recycler
 //        if (savedInstanceState != null) {
 //            int referencePosition = savedInstanceState.getInt(KEY_SAVED_LIST_POSITION);
 //            setReferencePosition(referencePosition);
@@ -69,12 +70,12 @@ public class ExpandableListFragment extends ExtendedListFragment implements OnCh
         
         // Pull down refresh
         mRefreshListLayout = v.findViewById(R.id.swipe_refresh_files);
-        mRefreshEmptyLayout = v.findViewById(R.id.swipe_refresh_files_emptyView);
+//        mRefreshEmptyLayout = v.findViewById(R.id.swipe_refresh_files_emptyView);
         
         onCreateSwipeToRefresh(mRefreshListLayout);
-        onCreateSwipeToRefresh(mRefreshEmptyLayout);
-        
-        mList.setEmptyView(mRefreshEmptyLayout);
+//        onCreateSwipeToRefresh(mRefreshEmptyLayout);
+
+//        mList.setEmptyView(mRefreshEmptyLayout);
 
         return v;
     }

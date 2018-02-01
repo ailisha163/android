@@ -68,6 +68,7 @@ import com.owncloud.android.R;
 import com.owncloud.android.authentication.AccountUtils;
 import com.owncloud.android.db.PreferenceManager;
 import com.owncloud.android.lib.common.utils.Log_OC;
+import com.owncloud.android.ui.EmptyRecyclerView;
 import com.owncloud.android.ui.activity.FileDisplayActivity;
 import com.owncloud.android.ui.activity.FolderPickerActivity;
 import com.owncloud.android.ui.activity.OnEnforceableRefreshListener;
@@ -93,13 +94,15 @@ public class ExtendedListFragment extends Fragment
     private static final String KEY_IS_GRID_VISIBLE = "IS_GRID_VISIBLE";
     public static final float minColumnSize = 2.0f;
 
+    // todo recycler
     private int maxColumnSize = 5;
     private int maxColumnSizePortrait = 5;
     private int maxColumnSizeLandscape = 10;
 
     private ScaleGestureDetector mScaleGestureDetector = null;
     protected SwipeRefreshLayout mRefreshListLayout;
-    protected SwipeRefreshLayout mRefreshEmptyLayout;
+    // todo recycler
+//    protected SwipeRefreshLayout mRefreshEmptyLayout;
     protected LinearLayout mEmptyListContainer;
     protected TextView mEmptyListMessage;
     protected TextView mEmptyListHeadline;
@@ -119,8 +122,8 @@ public class ExtendedListFragment extends Fragment
 
     private OnEnforceableRefreshListener mOnRefreshListener = null;
 
-    private RecyclerView mRecyclerView;
-    // TOOD recycler needed as field?
+    private EmptyRecyclerView mRecyclerView;
+    // TODO recycler needed as field?
     private RecyclerView.Adapter mAdapter;
 
     protected SearchView searchView;
@@ -381,35 +384,24 @@ public class ExtendedListFragment extends Fragment
         setupEmptyList(v);
 
         mRecyclerView = v.findViewById(R.id.list_root);
+        mRecyclerView.setHasFooter(true);
+        mRecyclerView.setEmptyView(v.findViewById(R.id.empty_list_view));
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-
-
-        // TODO recycler
-//        mRecyclerView.setOnItemClickListener(this);
-//        mListFooterView = inflater.inflate(R.layout.list_footer, null, false);
-//        mGridView = v.findViewById(R.id.grid_root);
 
         mScale = PreferenceManager.getGridColumns(getContext());
         setGridViewColumns(1f);
 
-//        mGridView.setOnItemClickListener(this);
-//        mGridFooterView = inflater.inflate(R.layout.list_footer, null, false);
-
         mScaleGestureDetector = new ScaleGestureDetector(MainApp.getAppContext(),new ScaleListener());
 
-        // TODO recycler view
-        getRecyclerView().setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                mScaleGestureDetector.onTouchEvent(motionEvent);
+        getRecyclerView().setOnTouchListener((view, motionEvent) -> {
+            mScaleGestureDetector.onTouchEvent(motionEvent);
 
-                if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
-                    view.performClick();
-                }
-
-                return false;
+            if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+                view.performClick();
             }
+
+            return false;
         });
 
         if (savedInstanceState != null) {
@@ -427,10 +419,10 @@ public class ExtendedListFragment extends Fragment
 
         // Pull-down to refresh layout
         mRefreshListLayout = v.findViewById(R.id.swipe_containing_list);
-        mRefreshEmptyLayout = v.findViewById(R.id.swipe_containing_empty);
+//        mRefreshEmptyLayout = v.findViewById(R.id.swipe_containing_empty);
 
         onCreateSwipeToRefresh(mRefreshListLayout);
-        onCreateSwipeToRefresh(mRefreshEmptyLayout);
+//        onCreateSwipeToRefresh(mRefreshEmptyLayout);
 
         // TODO recycler
 //        mRecyclerView.setEmptyView(mRefreshEmptyLayout);
@@ -522,8 +514,7 @@ public class ExtendedListFragment extends Fragment
         mEmptyListHeadline = view.findViewById(R.id.empty_list_view_headline);
         mEmptyListIcon = view.findViewById(R.id.empty_list_icon);
         mEmptyListProgress = view.findViewById(R.id.empty_list_progress);
-        mEmptyListProgress.getIndeterminateDrawable().setColorFilter(ThemeUtils.primaryColor(),
-                PorterDuff.Mode.SRC_IN);
+        mEmptyListProgress.getIndeterminateDrawable().setColorFilter(ThemeUtils.primaryColor(), PorterDuff.Mode.SRC_IN);
     }
 
     /**
@@ -667,7 +658,7 @@ public class ExtendedListFragment extends Fragment
         }
 
         mRefreshListLayout.setRefreshing(false);
-        mRefreshEmptyLayout.setRefreshing(false);
+//        mRefreshEmptyLayout.setRefreshing(false);
 
         if (mOnRefreshListener != null) {
             mOnRefreshListener.onRefresh();
@@ -690,7 +681,6 @@ public class ExtendedListFragment extends Fragment
      */
     public void setSwipeEnabled(boolean enabled) {
         mRefreshListLayout.setEnabled(enabled);
-        mRefreshEmptyLayout.setEnabled(enabled);
     }
 
     /**
@@ -880,7 +870,7 @@ public class ExtendedListFragment extends Fragment
     @Override
     public void onRefresh(boolean ignoreETag) {
         mRefreshListLayout.setRefreshing(false);
-        mRefreshEmptyLayout.setRefreshing(false);
+//        mRefreshEmptyLayout.setRefreshing(false);
 
         if (mOnRefreshListener != null) {
             mOnRefreshListener.onRefresh(ignoreETag);

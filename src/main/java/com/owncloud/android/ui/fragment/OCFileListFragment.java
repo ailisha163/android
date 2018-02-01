@@ -277,8 +277,6 @@ public class OCFileListFragment extends ExtendedListFragment implements OCFileLi
             setChoiceModeAsMultipleModal(savedInstanceState);
         }
 
-        mEmptyListContainer.setVisibility(View.VISIBLE);
-        
         Log_OC.i(TAG, "onCreateView() end");
         return v;
     }
@@ -1700,7 +1698,7 @@ public class OCFileListFragment extends ExtendedListFragment implements OCFileLi
             onMessageEvent(searchEvent);
 
             mRefreshListLayout.setRefreshing(false);
-            mRefreshEmptyLayout.setRefreshing(false);
+//            mRefreshEmptyLayout.setRefreshing(false);
         } else {
             super.onRefresh(false);
         }
