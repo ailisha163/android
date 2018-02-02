@@ -86,4 +86,9 @@ public class ExpandableListFragment extends ExtendedListFragment implements OnCh
         Log_OC.e(TAG, "onChildClick(). This method should be overridden!");
         return false;
     }
-}
+
+     @Override
+     public boolean isGridEnabled() {
+         return false;
+     }
+ }

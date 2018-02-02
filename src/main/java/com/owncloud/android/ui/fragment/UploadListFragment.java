@@ -24,17 +24,19 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ExpandableListView;
 
 import com.owncloud.android.R;
 import com.owncloud.android.db.OCUpload;
 import com.owncloud.android.lib.common.utils.Log_OC;
+import com.owncloud.android.ui.activity.FileActivity;
 import com.owncloud.android.ui.adapter.ExpandableUploadListAdapter;
 import com.owncloud.android.utils.AnalyticsUtils;
 
 /**
  * A Fragment that lists all files and folders in a given LOCAL path.
  */
-public class UploadListFragment extends ExtendedListFragment {
+public class UploadListFragment extends ExpandableListFragment {
     private static final String TAG = UploadListFragment.class.getSimpleName();
 
     private static final String SCREEN_NAME = "Uploads";
@@ -61,6 +63,8 @@ public class UploadListFragment extends ExtendedListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = super.onCreateView(inflater, container, savedInstanceState);
+        // todo recycler
+        // getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         setMessageForEmptyList(
                 R.string.upload_list_empty_headline, R.string.upload_list_empty_text_auto_upload,
                 R.drawable.ic_list_empty_upload, true
@@ -81,7 +85,7 @@ public class UploadListFragment extends ExtendedListFragment {
     public void onRefresh() {
         // remove the progress circle as soon as pull is triggered, like in the list of files
         // TODO recycler
-//        mRefreshEmptyLayout.setRefreshing(false);
+        // mRefreshEmptyLayout.setRefreshing(false);
         mRefreshListLayout.setRefreshing(false);
 
         mAdapter.notifyDataSetChanged();
@@ -110,23 +114,23 @@ public class UploadListFragment extends ExtendedListFragment {
         Log_OC.d(TAG, "onStart() start");
         super.onStart();
         // TODO recycler view
-//        mAdapter = new ExpandableUploadListAdapter((FileActivity)getActivity());
-//        setRecyclerViewAdapter(mAdapter);
+        mAdapter = new ExpandableUploadListAdapter((FileActivity) getActivity());
+        setListAdapter(mAdapter);
     }
 
     // TODO recycler view
-//    @Override
-//    public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
-//        boolean handled = false;
-//        OCUpload OCUpload = (OCUpload) mAdapter.getChild(groupPosition, childPosition);
-//        if (OCUpload != null) {
-//            // notify the click to container Activity
-//            handled = mContainerActivity.onUploadItemClick(OCUpload);
-//        } else {
-//            Log_OC.w(TAG, "Null object in ListAdapter!!");
-//        }
-//        return handled;
-//    }
+    @Override
+    public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
+        boolean handled = false;
+        OCUpload OCUpload = (OCUpload) mAdapter.getChild(groupPosition, childPosition);
+        if (OCUpload != null) {
+            // notify the click to container Activity
+            handled = mContainerActivity.onUploadItemClick(OCUpload);
+        } else {
+            Log_OC.w(TAG, "Null object in ListAdapter!!");
+        }
+        return handled;
+    }
 
     /**
      * Interface to implement by any Activity that includes some instance of
