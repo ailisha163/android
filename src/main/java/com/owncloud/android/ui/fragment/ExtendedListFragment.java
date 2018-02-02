@@ -67,13 +67,18 @@ import com.owncloud.android.R;
 import com.owncloud.android.authentication.AccountUtils;
 import com.owncloud.android.db.PreferenceManager;
 import com.owncloud.android.lib.common.utils.Log_OC;
+import com.owncloud.android.lib.resources.files.SearchOperation;
 import com.owncloud.android.ui.EmptyRecyclerView;
 import com.owncloud.android.ui.activity.FileDisplayActivity;
 import com.owncloud.android.ui.activity.FolderPickerActivity;
 import com.owncloud.android.ui.activity.OnEnforceableRefreshListener;
 import com.owncloud.android.ui.activity.UploadFilesActivity;
+import com.owncloud.android.ui.adapter.LocalFileListAdapter;
+import com.owncloud.android.ui.adapter.OCFileListAdapter;
+import com.owncloud.android.ui.events.SearchEvent;
 import com.owncloud.android.utils.ThemeUtils;
 
+import org.greenrobot.eventbus.EventBus;
 import org.parceler.Parcel;
 
 import java.util.ArrayList;
@@ -170,8 +175,7 @@ public class ExtendedListFragment extends Fragment
 
     public void switchToGridView() {
         if (!isGridEnabled()) {
-            // todo recycler get correct column size
-            getRecyclerView().setLayoutManager(new GridLayoutManager(getContext(), 3));
+            getRecyclerView().setLayoutManager(new GridLayoutManager(getContext(), getColumnSize()));
         }
     }
 
@@ -300,42 +304,42 @@ public class ExtendedListFragment extends Fragment
     private void performSearch(final String query, boolean isSubmit) {
         handler.removeCallbacksAndMessages(null);
 
-        if (!TextUtils.isEmpty(query)) {
+        RecyclerView.Adapter adapter = getRecyclerView().getAdapter();
 
+        if (!TextUtils.isEmpty(query)) {
             int delay = 500;
 
             if (isSubmit) {
                 delay = 0;
             }
 
-            // TODO recycler view
-//            if (mAdapter != null && mAdapter instanceof OCFileListAdapter) {
-//                handler.postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        if (AccountUtils.hasSearchSupport(AccountUtils.
-//                                getCurrentOwnCloudAccount(MainApp.getAppContext()))) {
-//                            EventBus.getDefault().post(new SearchEvent(query, SearchOperation.SearchType.FILE_SEARCH,
-//                                    SearchEvent.UnsetType.NO_UNSET));
-//                        } else {
-//                            OCFileListAdapter fileListListAdapter = (OCFileListAdapter) mAdapter;
-//                            fileListListAdapter.getFilter().filter(query);
-//                        }
-//                    }
-//                }, delay);
-//            } else if (mAdapter != null && mAdapter instanceof LocalFileListAdapter) {
-//                handler.postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        LocalFileListAdapter localFileListAdapter = (LocalFileListAdapter) mAdapter;
-//                        localFileListAdapter.filter(query);
-//                    }
-//                }, delay);
-//            }
-//
-//            if (searchView != null && delay == 0) {
-//                searchView.clearFocus();
-//            }
+            if (adapter != null && adapter instanceof OCFileListAdapter) {
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (AccountUtils.hasSearchSupport(AccountUtils.
+                                getCurrentOwnCloudAccount(MainApp.getAppContext()))) {
+                            EventBus.getDefault().post(new SearchEvent(query, SearchOperation.SearchType.FILE_SEARCH,
+                                    SearchEvent.UnsetType.NO_UNSET));
+                        } else {
+                            OCFileListAdapter fileListListAdapter = (OCFileListAdapter) adapter;
+                            fileListListAdapter.getFilter().filter(query);
+                        }
+                    }
+                }, delay);
+            } else if (adapter != null && adapter instanceof LocalFileListAdapter) {
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        LocalFileListAdapter localFileListAdapter = (LocalFileListAdapter) adapter;
+                        localFileListAdapter.filter(query);
+                    }
+                }, delay);
+            }
+
+            if (searchView != null && delay == 0) {
+                searchView.clearFocus();
+            }
         } else {
             Activity activity;
             if ((activity = getActivity()) != null) {
@@ -344,16 +348,14 @@ public class ExtendedListFragment extends Fragment
                     fileDisplayActivity.resetSearchView();
                     fileDisplayActivity.refreshListOfFilesFragment(true);
                 } else if (activity instanceof UploadFilesActivity) {
-                    // TODO recycler view
-//                    LocalFileListAdapter localFileListAdapter = (LocalFileListAdapter) mAdapter;
-//                    localFileListAdapter.filter(query);
+                    // TODO recycler 
+                    LocalFileListAdapter localFileListAdapter = (LocalFileListAdapter) adapter;
+                    localFileListAdapter.filter(query);
                 } else if (activity instanceof FolderPickerActivity) {
                     ((FolderPickerActivity) activity).refreshListOfFilesFragment(true);
                 }
-
             }
         }
-
     }
 
 
@@ -838,10 +840,8 @@ public class ExtendedListFragment extends Fragment
             maxColumnSize = maxColumnSizePortrait;
         }
 
-        // todo recycler
-//        if (getColumnSize() > maxColumnSize) {
-//            mGridView.setNumColumns(maxColumnSize);
-//            mGridView.invalidateViews();
-//        }
+        if (isGridEnabled() && getColumnSize() > maxColumnSize) {
+            ((GridLayoutManager) getRecyclerView().getLayoutManager()).setSpanCount(maxColumnSize);
+        }
     }
 }
