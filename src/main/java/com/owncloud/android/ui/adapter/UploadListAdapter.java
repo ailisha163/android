@@ -186,7 +186,7 @@ public class UploadListAdapter extends SectionedRecyclerViewAdapter<SectionedVie
         mUploadsStorageManager = new UploadsStorageManager(mParentActivity.getContentResolver(), parentActivity.getApplicationContext());
         mUploadGroups = new UploadGroup[3];
 
-        shouldShowHeadersForEmptySections(true);
+        shouldShowHeadersForEmptySections(false);
 
         mUploadGroups[0] = new UploadGroup(mParentActivity.getString(R.string.uploads_view_group_current_uploads)) {
             @Override
