@@ -771,6 +771,4 @@
     <string name="copy_move_to_encrypted_folder_not_supported">Copy/move into encrypted folder currently not supported.</string>
     <string name="untrusted_domain">Access through untrusted domain. Please see documentation for further info.</string>
     <string name="upload_list_loading">Loading uploads…</string>
-    <string name="upload_list_no_results">No uploads…</string>
-    <string name="upload_list_no_results_message">Enable auto upload or manually upload files</string>
 </resources>

@@ -111,10 +111,10 @@ public class UploadListActivity extends FileActivity {
     @BindView(android.R.id.list)
     public EmptyRecyclerView recyclerView;
 
-    @BindString(R.string.upload_list_no_results)
+    @BindString(R.string.upload_list_empty_headline)
     public String noResultsHeadline;
 
-    @BindString(R.string.upload_list_no_results_message)
+    @BindString(R.string.upload_list_empty_text_auto_upload)
     public String noResultsMessage;
 
     private Unbinder unbinder;
