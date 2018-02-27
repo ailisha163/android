@@ -267,7 +267,7 @@ public class OCFileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 gridViewHolder.checkbox.setImageResource(R.drawable.ic_checkbox_blank_outline);
             }
 
-            // todo recyler verify if onclicklistener should be done in onBindViewHolder or onCreateViewHolder (maybe in later one, as it is only done once)
+            // todo recycler verify if onclicklistener should be done in onBindViewHolder or onCreateViewHolder (maybe in later one, as it is only done once)
             // https://proandroiddev.com/recyclerview-pro-tips-part-1-8a291594bafc tip 2 --> vh.getAdapterPosition() 
             gridViewHolder.itemLayout.setOnClickListener(v -> ocFileListFragmentInterface.onItemClicked(file));
 
